@@ -195,12 +195,12 @@ class Attacker:
                 self.lr_counter += 1
                 self.seen.append(real_id)
 
-            if 1 <= self.lr_counter <= 3:    
-                self.left_list.append(real_id)
-            if 4 <= self.lr_counter <= 6:
-                self.right_list.append(real_id)
-            if self.lr_counter == 6:
-                self.lr_counter = 0
+                if 1 <= self.lr_counter <= 3:    
+                    self.left_list.append(real_id)
+                if 4 <= self.lr_counter <= 6:
+                    self.right_list.append(real_id)
+                if self.lr_counter == 6:
+                    self.lr_counter = 0
 
 
         self.enemy_units = enemy_units
