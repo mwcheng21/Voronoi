@@ -167,57 +167,90 @@ class Defense:
 class Attacker:
 
     def __init__(self, id, position, target="RIGHT"):
+        self.unitType = UnitType.ATTACK
+        self.number_units = 0
+        self.prev_state = None
         self.id = id
         self.x = float(position.x)
         self.y = float(position.y)
-        self.unit_type = UnitType.ATTACK
+        self.day = 0
         self.target = target # always either left or right
 
-    def get_move(self, game, positions):
+    def update(self, map_state, attackerIdxs, units, enemy_units):
+        self.map_state = map_state
+        #rotate the map state to the bottom left
+        self.number_units = len(attackerIdxs)
+        self.attackerIdxs = attackerIdxs
+        self.unit_locations = [unit for i, unit in enumerate(units) if i in attackerIdxs]
+        self.enemy_units = enemy_units
+        self.day += 1
+
+    def get_moves(self):
+        moves = [(0, 0, 0) for i, pos in enumerate(self.unit_locations)]
+        moved = [False for _ in range(self.number_units)]
+        if self.number_units == 0:
+            return []
+
+
         # print("ATTACKING MOVE")
-        if self.target == "LEFT":
-            current_x = int(np.floor(self.x))
-            current_y = int(np.floor(self.y))
-            if game[current_x][current_y] == -1 or 0:
-                print("DISPUTED CELL")
-                # The current state is disputed OR there is an enemy within surrounding 9 tiles
-                unit_count = 0
-                for pos in positions:
-                    if pos == Point2D(current_x, current_y):
-                        unit_count += 1
-                        print("Unit Count: ", unit_count)
-                if unit_count > 1:
-                    pass
-                    # send one forward
-                    # check if its still disputed (if not, then we killed the enemy)
-                    # keep advancing until disputed again 
-                else:
-                    return 1, 0, 0 # Does not move if alone in a disputed cell
-            else:
-                return 1, 0, 1
+        # if self.target == "LEFT":
+        #     current_x = int(np.floor(self.x))
+        #     current_y = int(np.floor(self.y))
+        #     if game[current_x][current_y] == -1 or 0:
+        #         print("DISPUTED CELL")
+        #         # The current state is disputed OR there is an enemy within surrounding 9 tiles
+        #         unit_count = 0
+        #         for pos in positions:
+        #             if pos == Point2D(current_x, current_y):
+        #                 unit_count += 1
+        #                 print("Unit Count: ", unit_count)
+        #         if unit_count > 1:
+        #             pass
+        #             # send one forward
+        #             # check if its still disputed (if not, then we killed the enemy)
+        #             # keep advancing until disputed again 
+        #         else:
+        #             return 1, 0, 0 # Does not move if alone in a disputed cell
+        #     else:
+        #         return 1, 0, 1
         
-        elif self.target == "RIGHT":
-            current_x = int(np.floor(self.x))
-            current_y = int(np.floor(self.y))
-            if game[current_x][current_y] == -1:
-                print("DISPUTED CELL")
-                # The current state is disputed
-                unit_count = 0
-                for pos in positions:
-                    if pos == Point2D(current_x, current_y):
-                        unit_count += 1
-                        print("Unit Count: ", unit_count)
-                if unit_count > 1:
-                    pass
-                    # send one forward
-                    # check if its still disputed (if not, then we killed the enemy)
-                    # keep advancing until disputed again 
-                else:
-                    return 0, 1, 0 # Does not move if alone in a disputed cell
-            else:
-                return 0, 1, 1
+        # elif self.target == "RIGHT":
+        #     current_x = int(np.floor(self.x))
+        #     current_y = int(np.floor(self.y))
+        #     if game[current_x][current_y] == -1:
+        #         print("DISPUTED CELL")
+        #         # The current state is disputed
+        #         unit_count = 0
+        #         for pos in positions:
+        #             if pos == Point2D(current_x, current_y):
+        #                 unit_count += 1
+        #                 print("Unit Count: ", unit_count)
+        #         if unit_count > 1:
+        #             pass
+        #             # send one forward
+        #             # check if its still disputed (if not, then we killed the enemy)
+        #             # keep advancing until disputed again 
+        #         else:
+        #             return 0, 1, 0 # Does not move if alone in a disputed cell
+        #     else:
+        #         return 0, 1, 1
         
-        return self.x, self.y, 1
+        # return self.x, self.y, 1
+
+        left_rigth_count = 0
+
+        for i, unit in enumerate(self.unit_locations):
+            lr_index = int(np.floor(i/3))
+
+            if lr_index % 2 == 0:
+                # Even - LEFT attacking troops
+                moves[i] = 1, 0, 1
+            else:
+                # Odd - RIGHT attacking troops
+                moves[i] = 1, 1, 0 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
+
+
+        return moves
 
 
 
@@ -292,6 +325,7 @@ class Player:
 
 
         self.defense = Defense(self.player_idx, self.spawn_point)
+        self.attack = Attacker(self.player_idx, self.spawn_point)
 
     def play(self, unit_id, unit_pos, map_states, current_scores, total_scores) -> [Tuple[float, float]]:
         """Function which based on current game state returns the distance and angle of each unit active on the board
@@ -310,7 +344,7 @@ class Player:
                                                 move each unit of the player
                 """
         self.add_spawn_units_if_needed(unit_id[self.player_idx])
-        spacer, attacker, defenders = self.get_unit_indexes(unit_id[self.player_idx]) 
+        spacer, attackers, defenders = self.get_unit_indexes(unit_id[self.player_idx]) 
 
         enemy_ids, enemy_units = self.get_enemy_units(unit_id, unit_pos)
 
@@ -332,24 +366,30 @@ class Player:
         for idx in spacer:
             moves[idx] = self.transform_move(1, 1, 1) #spacer.move_function(unit, idx, etc)
 
-        for idx in attacker:
-            target_param = ""
-            if self.left_right_count < 3:
-                target_param = "RIGHT"
-                self.left_right_count += 1
-            elif self.left_right_count < 6:
-                target_param = "LEFT"
-                self.left_right_count += 1
+        # for idx in attacker:
+        #     target_param = ""
+        #     if self.left_right_count < 3:
+        #         target_param = "RIGHT"
+        #         self.left_right_count += 1
+        #     elif self.left_right_count < 6:
+        #         target_param = "LEFT"
+        #         self.left_right_count += 1
             
-            if self.left_right_count > 5:
-                self.left_right_count = 0
+        #     if self.left_right_count > 5:
+        #         self.left_right_count = 0
 
 
-            attacker = Attacker(unit_id[self.player_idx][idx], unit_pos[self.player_idx][idx], target_param)
-            x, y, dist = attacker.get_move(self.map_states, self.unit_pos)
+        #     attacker = Attacker(unit_id[self.player_idx][idx], unit_pos[self.player_idx][idx], target_param)
+        #     x, y, dist = attacker.get_move(self.map_states, self.unit_pos)
 
-            # moves[idx] = self.transform_move(0, 1) #attacker.move_function(unit, idx, etc)
-            moves[idx] = self.transform_move(x, y, dist)
+        #     # moves[idx] = self.transform_move(0, 1) #attacker.move_function(unit, idx, etc)
+        #     moves[idx] = self.transform_move(x, y, dist)
+        self.attack.update(self.map_states, attackers, unit_pos[self.player_idx], enemy_units)
+        attackingMoves = self.attack.get_moves()
+        for attacking_move_idx, real_idx in enumerate(attackers):
+            dist, x, y = attackingMoves[attacking_move_idx]
+            moves[real_idx] = (dist if dist <= 1 else 1, np.arctan2(y, x))
+
 
         self.defense.update(self.map_states, defenders, unit_pos[self.player_idx], enemy_units)
         defensiveMoves = self.defense.get_moves()
