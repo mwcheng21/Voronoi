@@ -86,7 +86,7 @@ class Player:
 
     def play(
         self, unit_id, unit_pos, map_states, current_scores, total_scores
-    ) -> [tuple[float, float]]:
+    ) -> [Tuple[float, float]]:
         """Function which based on current game state returns the distance and angle of each unit active on the board
 
         Args:
