@@ -166,7 +166,7 @@ class Defense:
 
 class Attacker:
 
-    def __init__(self, id, position, target="RIGHT"):
+    def __init__(self, id, position):
         self.unitType = UnitType.ATTACK
         self.number_units = 0
         self.prev_state = None
@@ -174,19 +174,40 @@ class Attacker:
         self.x = float(position.x)
         self.y = float(position.y)
         self.day = 0
-        self.target = target # always either left or right
+        
+        self.left_list = []
+        self.right_list = []
+
+        self.seen = []
+
+        self.lr_counter = 0
+
+
 
     def update(self, map_state, attackerIdxs, units, enemy_units):
         self.map_state = map_state
         #rotate the map state to the bottom left
         self.number_units = len(attackerIdxs)
         self.attackerIdxs = attackerIdxs
-        self.unit_locations = [unit for i, unit in enumerate(units) if i in attackerIdxs]
+        self.unit_locations = [(unit,i) for i, unit in enumerate(units) if i in attackerIdxs]
+        for (unit, real_id) in self.unit_locations:
+            if real_id not in self.seen:
+                self.lr_counter += 1
+                self.seen.append(real_id)
+
+            if 1 <= self.lr_counter <= 3:    
+                self.left_list.append(real_id)
+            if 4 <= self.lr_counter <= 6:
+                self.right_list.append(real_id)
+            if self.lr_counter == 6:
+                self.lr_counter = 0
+
+
         self.enemy_units = enemy_units
         self.day += 1
 
     def get_moves(self):
-        moves = [(0, 0, 0) for i, pos in enumerate(self.unit_locations)]
+        moves = [(0, 0, 0) for i, (pos, real_id) in enumerate(self.unit_locations)]
         moved = [False for _ in range(self.number_units)]
         if self.number_units == 0:
             return []
@@ -239,15 +260,16 @@ class Attacker:
 
         left_rigth_count = 0
 
-        for i, unit in enumerate(self.unit_locations):
-            lr_index = int(np.floor(i/3))
-
-            if lr_index % 2 == 0:
+        for i, (unit, real_id) in enumerate(self.unit_locations):
+            if real_id in self.left_list:
                 # Even - LEFT attacking troops
-                moves[i] = 1, 0, 1
-            else:
+                moves[i] = 1, 1, 0 
+            elif real_id in self.left_list:
                 # Odd - RIGHT attacking troops
                 moves[i] = 1, 1, 0 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
+            
+            else:
+                moves[i] = 1, 0, 1
 
 
         return moves
