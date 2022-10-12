@@ -1,6 +1,6 @@
 Initialise random number generator with seed 2
 Adding player Group 6 from class players.g6_player
-Initializing player Group 6 took 0.003s
+Initializing player Group 6 took 0.001s
 Adding player Group 4 from class players.g4_player
 Initializing player Group 4 took 0.000s
 Adding player Group 5 from class players.g5_player
@@ -86,102 +86,93 @@ Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
-Group 6 unit 1 has been cutoff from homebase
-Group 6 unit 2 has been cutoff from homebase
-Group 6 unit 3 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 5 unit 1 has been cutoff from homebase
-Group 5 unit 2 has been cutoff from homebase
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 6 has been cutoff from homebase
-Group 5 unit 3 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 4 has been cutoff from homebase
-Group 6 unit 5 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 7 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 12 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 9 has been cutoff from homebase
-Group 4 unit 2 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 15 has been cutoff from homebase
-Group 4 unit 3 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 17 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 16 has been cutoff from homebase
-Group 5 unit 4 has been cutoff from homebase
-Group 1 failed since provided invalid action []
-Group 1 failed since provided invalid action []
-Group 6 unit 8 has been cutoff from homebase
-Group 6 unit 19 has been cutoff from homebase
-Group 5 unit 5 has been cutoff from homebase
-Group 1 failed since provided invalid action [(1.0, 2.671581147566498), (1.0, 3.060720746738503), (0.9999999999999999, -2.9609355716606856), (1.0, -2.739650325134303), (1.0, -3.1259038800374532), (1.0, -2.727909732937685), (1.0, 3.083773657711653), (1.0, -2.717631409208529), (0.9999999999999999, -3.1001298636587027), (1.0, 3.109545108700122), (1.0, -3.0640840775130216), (1.0, -3.0771955524997696), (1.0, -3.006807730960379), (1.0, -2.9762022964322217), (1.0, -2.947721753821276), (1.0, -2.771688231432031), (0.9999999999999999, -2.4076788978287875), (0.9999999999999999, -2.388885207811941), (1.0, -2.347385637435248), (1.0, -2.310194649662205), (0.9999999999999999, -2.232802001578313), (0.9999999999999999, -2.024925165414507)]
-Group 6 unit 18 has been cutoff from homebase
 Group 4 unit 1 has been cutoff from homebase
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
-Group 6 unit 20 has been cutoff from homebase
 Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 6 unit 14 has been cutoff from homebase
+Group 5 unit 1 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 5 unit 2 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 6 unit 15 has been cutoff from homebase
+Group 4 unit 2 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 5 unit 3 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 5 unit 4 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 6 unit 8 has been cutoff from homebase
+Group 5 unit 5 has been cutoff from homebase
+Group 1 failed since provided invalid action [(1.0, -2.268142092073415), (0.9999999999999999, -2.691671886841315), (1.0, -2.8058665349432466), (1.0, -2.6169743377600763), (1.0, -2.9432626583761947), (1.0, -2.6628571080651624), (0.9999999999999999, -3.0386722764288185), (1.0, -2.7919413595842886), (0.9999999999999999, -3.046953941020255), (1.0, -3.131131062976797), (1.0, 3.0637781675969213), (1.0, -3.1019040179786033), (1.0, -3.10301455181651), (0.9999999999999999, -2.8624730373503113), (0.9999999999999999, -2.7941873589216453), (0.9999999999999999, -2.7062754228176042), (1.0, -2.638580046188876), (1.0, -2.0384804215161663), (1.0, -1.887409909676824), (0.9999999999999999, -1.9268510157734555), (1.0, -1.9116945571258324), (1.0, -1.9096882766148149)]
+Group 1 failed since provided invalid action []
+Group 5 unit 6 has been cutoff from homebase
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 1 failed since provided invalid action []
+Group 6 unit 18 has been cutoff from homebase
+Group 4 unit 3 has been cutoff from homebase
+Group 5 unit 7 has been cutoff from homebase
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 6 unit 10 has been cutoff from homebase
-Group 1 failed since provided invalid action [(1.0, -1.593641151584807), (1.0, 2.4041236325806885), (0.9999999999999999, -1.7500652229560247), (0.9999999999999999, -2.7469889363596676), (0.9999999999999999, -3.0069333161486784), (1.0, -2.7205703176699187), (0.9999999999999999, 3.029664646145125), (1.0, -2.7890228245122946), (1.0, 3.1151728349846555), (0.9999999999999999, 2.9751598714280183), (0.9999999999999999, 3.0825209416170285), (0.9999999999999999, 3.005464927249422), (1.0, 3.0609683730562685), (1.0, 3.051243956217092), (1.0, 3.0000419316934464), (1.0, -3.032946003606796), (1.0, -2.9249033214123314), (1.0, -2.7525971198069517), (0.9999999999999999, -2.348498880851874), (1.0, -2.3595337866046346), (0.9999999999999999, -2.270668737832499), (1.0, -1.989692545036686), (1.0, -2.02344929688042), (0.9999999999999999, -2.023423711930327)]
-Group 1 failed since provided invalid action []
-Group 6 unit 21 has been cutoff from homebase
+Group 1 failed since provided invalid action [(1.0, -1.604431385104587), (1.0, -2.9094367012322855), (1.0, -2.5372585574707527), (0.9999999999999999, -2.5969964969122956), (1.0, -2.926274340034234), (1.0, -2.7026599518280245), (0.9999999999999998, -3.017184198658586), (0.9999999999999999, 3.113120552971713), (0.9999999999999999, 2.94835225205971), (1.0, 3.0656960769581314), (1.0, 2.936005072361069), (0.9999999999999999, -2.971298163530628), (1.0, -2.975621953258828), (1.0, -2.9050553283065783), (1.0, -2.911582020653453), (1.0, -2.517844722541699), (1.0, -2.2286443764064607), (1.0, -2.2465697260440796), (0.9999999999999999, -1.977290075546258), (0.9999999999999999, -1.963629483843973), (1.0, -1.9740985485868086), (1.0, -1.946623711656639)]
+Group 6 unit 9 has been cutoff from homebase
 Group 5 unit 8 has been cutoff from homebase
 Group 1 failed since provided invalid action []
+Group 6 unit 19 has been cutoff from homebase
+Group 5 unit 9 has been cutoff from homebase
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
 Group 1 failed since provided invalid action []
-Group 5 unit 6 has been cutoff from homebase
+Group 1 failed since provided invalid action []

@@ -1,7 +1,7 @@
 import os
 import pickle
+# from turtle import width
 #from time import clock_settime
-#from turtle import width
 import numpy as np
 import sympy
 import logging
@@ -9,8 +9,8 @@ from typing import Tuple
 from sympy.geometry import Point2D
 from enum import Enum
 from scipy.ndimage import measurements, morphology
-
-
+import math
+import random
 
 class UnitType(Enum):
     SPACER = 0
@@ -26,7 +26,7 @@ class Defense:
         self.spawn_point = (spawn_point.x, spawn_point.y)
         self.player_idx = player_idx
         self.day = 0
-        self.scanner_radius = 35
+        self.scanner_radius = 20
 
     def update(self, map_state, defenderIdxs, units, enemy_units):
         self.map_state = map_state
@@ -69,7 +69,7 @@ class Defense:
                 if distance > self.scanner_radius:
                     break
                 offset_weight = 3
-                if cluster_points_left[idx] == 0 and np.linalg.norm(self.spawn_point - clusters[idx]["centroid"]) < 60:
+                if cluster_points_left[idx] == 0:# and np.linalg.norm(self.spawn_point - clusters[idx]["centroid"]) < 60:
                     offset_weight = 4
 
                 if cluster_points_left[idx] > 0 or offset_weight != 3:
@@ -102,40 +102,60 @@ class Defense:
             # if cluster not all true
             # add offset
 
-        c_x, c_y = (np.array([50, 50]) - self.spawn_point)*(3/4)
-        c_dist = np.array(np.linalg.norm(np.array([c_x, c_y])))
-        center_angle = np.arctan2(c_y, c_x)
-        hover_point_angles = [center_angle]
-        for i in range(1, 6):
-            angle = (np.pi/24)*i
-            hover_point_angles.append(center_angle + angle)
-            hover_point_angles.append(center_angle - angle)
-        hover_points = [self.spawn_point/c_dist + np.array((np.cos(angle), np.sin(angle))) for angle in hover_point_angles]
-        n_hover = len(hover_points)
-        i = 0
-        direction_to_spawn = (self.spawn_point - np.array([50, 50]))/np.linalg.norm(self.spawn_point - np.array([50, 50]))
-        for j, unit in enumerate(self.unit_locations):
-            if moved[j] == False:
-                moves[j] = 1, hover_points[i%n_hover][0]*(c_dist - (i//n_hover)*2*direction_to_spawn[0]) - unit.x, hover_points[i%n_hover][1]*(c_dist - (i//n_hover)*2*direction_to_spawn[1]) - unit.y
-                i += 1
-        
-        # TODO:
-        # change hover points
-        # smaller radius
+        n_free_units = self.number_units - sum(moved)
+        hover_points = self.get_hover_points(n_free_units)
+        offset = (1/6)
+        hover_points = [np.array(point) + (self.spawn_point - np.array(point))*offset for point in hover_points]
+
+        free_units = [i for i, move in enumerate(moves) if not moved[i]]
+
+        for point in hover_points:
+            distances = sorted([(idx, np.linalg.norm(np.array(unit) - point)) for idx, unit in enumerate(self.unit_locations)], key=lambda x: x[1])
+            for j, (idx, distance) in enumerate(distances):
+
+                if idx in free_units:
+                    free_units.remove(idx)
+                    moves[idx] = distance, point[0] - self.unit_locations[idx].x, point[1] - self.unit_locations[idx].y
+                    break
+
         # if path to homme width is < some X, retreat to hover point
         
-        # go to location - some offset (maybe calc trajectory)
         # make units the reverse of the cluster (negate then add 2*(closest unit to 0)) - some offset towards home
         # once all units are in place - (current loc to calc place ~=, for all units in this one match)
-        # hold the line (aka offset becomes 0)
-
-
-        #does any of this work for diagonal?
         # self.prev_state = self.map_state
+
         return moves
+
+    def get_hover_points(self, n):
+        hover_points = []
+        step = 90/n
+
+        degrees_to_hover = [(step*i) + 90/(n+1) for i in range(n)]
+        random.shuffle(degrees_to_hover)
+
+        for deg in degrees_to_hover:
+            angle = math.radians(deg)
+            angle = angle - (math.pi/2 * self.player_idx)
+            hover_points.append(self.get_raycast_to_border(angle))
+
+        return hover_points
+    
+    def get_raycast_to_border(self, angle):
+        min_dist = 25
+        max_dist = 75
+        step = 1
+        for i in reversed(range(min_dist, max_dist, step)):
+            point = self.spawn_point + np.array((i*math.cos(angle), i*math.sin(angle)))
+            if point[0] > 100 or point[0] < 0 or point[1] > 100 or point[1] < 0:
+                continue
+            if self.map_state[math.floor(point[0])][math.floor(point[1])] == self.player_idx+1:
+                return point
+
+        return self.spawn_point
 
     def number_in_circle(self, units, center, radius):
         units = set([tuple(np.floor(unit)) for unit in units])
+        units.add(tuple(np.floor(center)))
         return sum([1 if np.linalg.norm(np.floor(np.array(unit)) - np.floor(center)) <= radius else 0 for unit in units])
     
     def get_clusters(self):
@@ -224,15 +244,12 @@ class Attacker:
         if self.number_units == 0:
             return []
 
-        print("Real IDs: ", self.real_ids)
-        print("Left list: ", self.left_list)
-        print("Right list: ", self.right_list)
-
 
         for i, (unit,pos) in enumerate(self.unit_locations):
             real_id = self.real_ids[pos]
             triplet_no = (self.seen.index(real_id)) % 3 # Is the unit 1, 2, or 3 in the triplet to determine special movement
 
+            # # Code to group up triplets
             # if real_id in self.left_list and real_id not in self.final_left_list:
             #     if triplet_no == 0 or triplet_no == 1:
             #         moves[i] = 1, 1, 0 # Move left
@@ -269,22 +286,98 @@ class Attacker:
             if real_id in self.left_list:
                 # Even - LEFT attacking troops
                 moves[i] = 1, 1, 0 
-
-
             elif real_id in self.right_list:
                 # Odd - RIGHT attacking troops
                 moves[i] = 1, 0, 1 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
-            
 
             else:
                 moves[i] = 0, 0, 1 # Does not move
 
 
-            # Do some mod stuff with str to int of real id for 3-group movement
-
-
         return moves
 
+
+
+
+
+
+class Spacer:
+    
+    def __init__(self, player_idx, spawn_point):
+        self.unitType = UnitType.SPACER
+        self.number_units = 0
+        self.prev_state = None
+        self.spawn_point = spawn_point
+        self.player_idx = player_idx
+        self.day = 0
+        self.scanner_radius = 50
+
+    def update(self, map_state, spacerIdxs, units, enemy_units):
+        self.map_state = map_state
+        #rotate the map state to the bottom left
+        self.number_units = len(spacerIdxs)
+        self.spacerIdxs = spacerIdxs
+        self.unit_locations = [unit for i, unit in enumerate(units) if i in spacerIdxs]
+        self.enemy_units = enemy_units
+        self.day += 1
+    def get_moves(self):
+        moves = {}
+        if self.number_units == 0:
+            return moves
+        #print()
+        # Adapted from group 4 Code
+        ENEMY_INFLUENCE = 1 # TODO: change influence values for best spacers!
+        HOME_INFLUENCE = 20
+        ALLY_INFLUENCE = 0.5
+
+        for i, unit in enumerate(self.unit_locations):
+            unit = np.array(unit)
+            #print('u', unit)
+            enemy_force = np.add.reduce([self.repelling_force(unit,np.array(enemy)) for enemy in self.enemy_units])
+            #print('sp',(self.spawn_point))
+            home_force = self.repelling_force(unit, np.array(self.spawn_point))
+            #print('hghgh',enemy_force, home_force)
+            ally_forces_list = []
+            for ally in self.unit_locations:
+                ally = np.array(ally)
+                #print('ally',ally)
+                if not np.array_equal(ally, unit): 
+                    #print('not ally')
+                    ally_forces_list.append(self.repelling_force(unit,ally))
+            ally_force = np.add.reduce(ally_forces_list)
+            #ally_force = np.add.reduce([self.repelling_force(unit,ally) for ally in self.unit_locations if not unit]) ###TODO: currently only looks at other SPACERS as ally's not all. Need to change this.
+            #print(('ally force:', ally_force))
+            total_force = self.normalize((enemy_force * ENEMY_INFLUENCE)
+                                         + (home_force * HOME_INFLUENCE)
+                                         + (ally_force * ALLY_INFLUENCE)
+                                         )
+            #print(unit)
+            #print(type(unit))
+            #print(total_force)
+            moves[i] = self.to_polar(total_force)
+        #print('moves',moves)
+        return moves
+
+    def force_vec(self, p1, p2):
+        v = p1 - p2
+        mag = np.linalg.norm(v)
+        #print(v,'over',mag)
+        unit = v / mag
+        return unit, mag
+
+    def to_polar(self, p):
+        x, y = p
+        return np.sqrt(x**2 + y**2), np.arctan2(y, x)
+
+    def normalize(self, v):
+        return v / np.linalg.norm(v)
+
+    def repelling_force(self, p1, p2):
+
+        if np.array_equal(p1,p2): 
+            return 0
+        dir, mag = self.force_vec(p1, p2)
+        return dir * 1 / (mag)        
 
 
 
@@ -294,6 +387,7 @@ class Player:
                  player_idx: int, spawn_point: sympy.geometry.Point2D, min_dim: int, max_dim: int, precomp_dir: str) \
             -> None:
         """Initialise the player with given skill.
+
             Args:
                 rng (np.random.Generator): numpy random number generator, use this for same player behavior across run
                 logger (logging.Logger): logger use this like logger.info("message")
@@ -335,7 +429,7 @@ class Player:
 
         testing = False
         if testing:
-            testingType = UnitType.ATTACK if self.player_idx == 0 else UnitType.DEFENSE
+            testingType = UnitType.DEFENSE
             self.PHASE_ONE_OUTPUT = [testingType]
             self.PHASE_TWO_OUTPUT = [testingType]
             self.PHASE_THREE_OUTPUT = [testingType]
@@ -356,12 +450,13 @@ class Player:
             UnitType.DEFENSE: {}
         }
 
-
+        self.spacer = Spacer(self.player_idx, self.spawn_point)
         self.defense = Defense(self.player_idx, self.spawn_point)
         self.attack = Attacker(self.player_idx, self.spawn_point)
 
     def play(self, unit_id, unit_pos, map_states, current_scores, total_scores) -> [Tuple[float, float]]:
         """Function which based on current game state returns the distance and angle of each unit active on the board
+
                 Args:
                     unit_id (list(list(str))): contains the ids of each player's units (unit_id[player_idx][x])
                     unit_pos (list(list(float))): contains the position of each unit currently present on the map
@@ -372,12 +467,13 @@ class Player:
                                                     (current_scores[player_idx])
                     total_scores (list(int)): contains the cumulative scores up until the current day
                                                     (total_scores[player_idx]
+
                 Returns:
                     List[Tuple[float, float]]: Return a list of tuples consisting of distance and angle in radians to
                                                 move each unit of the player
                 """
         self.add_spawn_units_if_needed(unit_id[self.player_idx])
-        spacer, attackers, defenders = self.get_unit_indexes(unit_id[self.player_idx]) 
+        spacers, attackers, defenders = self.get_unit_indexes(unit_id[self.player_idx]) 
 
         enemy_ids, enemy_units = self.get_enemy_units(unit_id, unit_pos)
 
@@ -396,16 +492,21 @@ class Player:
         self.left_right_count = 0
 
         moves = [self.transform_move(0, 0, 0)] * len(unit_pos[self.player_idx])
-        for idx in spacer:
-            moves[idx] = self.transform_move(1, 1, 1) #spacer.move_function(unit, idx, etc)
 
+        self.spacer.update(self.map_states, spacers, unit_pos[self.player_idx], enemy_units)
+        #print(spacers)
+        #print('self.spacer.number_units',self.spacer.number_units)
+        spacerMoves = self.spacer.get_moves()
+        #print('spacerMoves',spacerMoves)
         
+        for spacermoveidx, real_idx in enumerate(spacers):
+            moves[real_idx] = spacerMoves[spacermoveidx]
+
         self.attack.update(self.map_states, attackers, unit_pos[self.player_idx], enemy_units, unit_id)
         attackingMoves = self.attack.get_moves()
         for attacking_move_idx, real_idx in enumerate(attackers):
             dist, x, y = attackingMoves[attacking_move_idx]
             moves[real_idx] = (dist if dist <= 1 else 1, np.arctan2(y, x))
-
 
         self.defense.update(self.map_states, defenders, unit_pos[self.player_idx], enemy_units)
         defensiveMoves = self.defense.get_moves()
