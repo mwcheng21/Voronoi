@@ -189,7 +189,16 @@ class Attacker:
         #rotate the map state to the bottom left
         self.number_units = len(attackerIdxs)
         self.attackerIdxs = attackerIdxs
-        self.unit_locations = [(unit,i) for i, unit in enumerate(units) if i in attackerIdxs]
+        #self.unit_locations = [(unit,i) for i, unit in enumerate(units) if i in attackerIdxs]
+
+        self.unit_locations = [(units[idx], real_idx) for idx, real_idx in enumerate(attackerIdxs)]
+
+        print([real for (i, real) in self.unit_locations])
+
+        # self.unit_locations = [unit for i, unit in enumerate(units) if i in defenderIdxs]
+        #attacker = [idx for id, idx in self.unit_types[UnitType.ATTACK].items() if id in unit_ids]
+
+
         for (unit, real_id) in self.unit_locations:
             if real_id not in self.seen:
                 self.lr_counter += 1
@@ -264,12 +273,12 @@ class Attacker:
             if real_id in self.left_list:
                 # Even - LEFT attacking troops
                 moves[i] = 1, 1, 0 
-            elif real_id in self.left_list:
+            elif real_id in self.right_list:
                 # Odd - RIGHT attacking troops
-                moves[i] = 1, 1, 0 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
+                moves[i] = 1, 0, 1 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
             
             else:
-                moves[i] = 1, 0, 1
+                moves[i] = 0, 0, 1
 
 
         return moves
