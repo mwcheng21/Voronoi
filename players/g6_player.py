@@ -176,10 +176,16 @@ class Attacker:
         self.day = 0
         self.real_ids = []
         
-        self.left_list = []
-        self.right_list = []
         self.seen = []
         self.lr_counter = 0
+
+        self.left_list = []
+        self.right_list = []
+        self.tmp_left_list = []
+        self.tmp_right_list = []
+        self.final_left_list = []
+        self.final_right_list = []
+        
 
 
 
@@ -191,11 +197,11 @@ class Attacker:
         self.unit_id = unit_id
         self.real_ids = self.unit_id[self.player_id]
 
-        self.unit_locations = [unit for i, unit in enumerate(units) if i in attackerIdxs]
+        self.unit_locations = [(unit,i) for i, unit in enumerate(units) if i in attackerIdxs]
 
 
-        for i, unit in enumerate(self.unit_locations):
-            real_id = self.real_ids[i]
+        for i, (unit,pos) in enumerate(self.unit_locations):
+            real_id = self.real_ids[pos]
 
             if real_id not in self.seen:
                 self.lr_counter += 1
@@ -203,33 +209,73 @@ class Attacker:
 
                 if 1 <= self.lr_counter <= 3:    
                     self.left_list.append(real_id)
-                if 4 <= self.lr_counter <= 6:
+                elif 4 <= self.lr_counter <= 6:
                     self.right_list.append(real_id)
-                if self.lr_counter == 6:
-                    self.lr_counter = 0
+                    if self.lr_counter == 6:
+                        self.lr_counter = 0
 
 
         self.enemy_units = enemy_units
         self.day += 1
 
     def get_moves(self):
-        moves = [(0, 0, 0) for i, pos in enumerate(self.unit_locations)]
+        moves = [(0, 0, 0) for i, (unit,pos) in enumerate(self.unit_locations)]
         moved = [False for _ in range(self.number_units)]
         if self.number_units == 0:
             return []
 
+        print("Real IDs: ", self.real_ids)
+        print("Left list: ", self.left_list)
+        print("Right list: ", self.right_list)
 
-        for i, unit in enumerate(self.unit_locations):
-            real_id = self.real_ids[i]
+
+        for i, (unit,pos) in enumerate(self.unit_locations):
+            real_id = self.real_ids[pos]
             triplet_no = (self.seen.index(real_id)) % 3 # Is the unit 1, 2, or 3 in the triplet to determine special movement
+
+            # if real_id in self.left_list and real_id not in self.final_left_list:
+            #     if triplet_no == 0 or triplet_no == 1:
+            #         moves[i] = 1, 1, 0 # Move left
+            #         self.tmp_left_list.append(real_id)
+            #         self.left_list.remove(real_id)
+            #     else:
+            #         moves[i] = 1, 1, 0
+            #         self.left_list.remove(real_id)
+            #         self.final_left_list.append(real_id)
+            #         self.final_left_list.extend(self.left_list)
+            #         self.left_list.clear()
+
+            # elif real_id in self.final_left_list:
+            #     moves[i] = 1, 1, 0 
+
+
+            # elif real_id in self.right_list and real_id not in self.final_right_list:
+            #     if triplet_no == 0 or triplet_no == 1:
+            #         moves[i] = 1, 0, 1 # Move right
+            #         self.tmp_right_list.append(real_id)
+            #         self.right_list.remove(real_id)
+            #     else:
+            #         moves[i] = 1, 0, 1
+            #         self.right_list.remove(real_id)
+            #         self.final_right_list.append(real_id)
+            #         self.final_right_list.extend(self.right_list)
+            #         self.right_list.clear()
+
+            # elif real_id in self.final_right_list:
+            #     moves[i] = 1, 0, 1 
+
+
 
             if real_id in self.left_list:
                 # Even - LEFT attacking troops
                 moves[i] = 1, 1, 0 
+
+
             elif real_id in self.right_list:
                 # Odd - RIGHT attacking troops
                 moves[i] = 1, 0, 1 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
             
+
             else:
                 moves[i] = 0, 0, 1 # Does not move
 
@@ -287,7 +333,7 @@ class Player:
         self.PHASE_TWO_OUTPUT = [UnitType.SPACER, UnitType.ATTACK, UnitType.DEFENSE, UnitType.ATTACK, UnitType.DEFENSE]
         self.PHASE_THREE_OUTPUT = [UnitType.ATTACK, UnitType.DEFENSE, UnitType.ATTACK, UnitType.DEFENSE]
 
-        testing = True
+        testing = False
         if testing:
             testingType = UnitType.ATTACK if self.player_idx == 0 else UnitType.DEFENSE
             self.PHASE_ONE_OUTPUT = [testingType]
@@ -353,24 +399,7 @@ class Player:
         for idx in spacer:
             moves[idx] = self.transform_move(1, 1, 1) #spacer.move_function(unit, idx, etc)
 
-        # for idx in attacker:
-        #     target_param = ""
-        #     if self.left_right_count < 3:
-        #         target_param = "RIGHT"
-        #         self.left_right_count += 1
-        #     elif self.left_right_count < 6:
-        #         target_param = "LEFT"
-        #         self.left_right_count += 1
-            
-        #     if self.left_right_count > 5:
-        #         self.left_right_count = 0
-
-
-        #     attacker = Attacker(unit_id[self.player_idx][idx], unit_pos[self.player_idx][idx], target_param)
-        #     x, y, dist = attacker.get_move(self.map_states, self.unit_pos)
-
-        #     # moves[idx] = self.transform_move(0, 1) #attacker.move_function(unit, idx, etc)
-        #     moves[idx] = self.transform_move(x, y, dist)
+        
         self.attack.update(self.map_states, attackers, unit_pos[self.player_idx], enemy_units, unit_id)
         attackingMoves = self.attack.get_moves()
         for attacking_move_idx, real_idx in enumerate(attackers):
