@@ -128,6 +128,8 @@ class Defense:
 
     def get_hover_points(self, n):
         hover_points = []
+        if n == 0:
+            n = 1
         step = 90/n
 
         degrees_to_hover = [(step*i) + 90/(n+1) for i in range(n)]
@@ -201,10 +203,10 @@ class Attacker:
 
         self.left_list = []
         self.right_list = []
-        self.tmp_left_list = []
-        self.tmp_right_list = []
-        self.final_left_list = []
-        self.final_right_list = []
+        self.left_mid_list = []
+        self.right_mid_list = []
+        self.left_turn2_list = []
+        self.right_turn2_list = []
         
 
 
@@ -230,13 +232,58 @@ class Attacker:
                 if 1 <= self.lr_counter <= 3:    
                     self.left_list.append(real_id)
                 elif 4 <= self.lr_counter <= 6:
-                    self.right_list.append(real_id)
+                    
+                    #self.right_list.append(real_id)
+                    # ********** TESTING all going left ********************
+                    self.left_list.append(real_id)
+
+
+
                     if self.lr_counter == 6:
                         self.lr_counter = 0
 
 
-        self.enemy_units = enemy_units
+        self.enemy_units = []
+        for enemy in enemy_units:
+            self.enemy_units.append( Point2D( int(math.floor(enemy.x)), int(math.floor(enemy.y)) ) )
         self.day += 1
+
+
+    def transform_angle(self, x: float, y: float) -> float:
+        angle = np.arctan2(y, x)
+        if self.player_id == 0:
+            return angle
+        elif self.player_id == 1:
+            return angle - np.pi/2
+        elif self.player_id == 2:
+            return angle + np.pi
+        else:# self.player_id == 3:
+            return angle + np.pi / 2
+
+
+    def nearest_enemy_on_line(self, unit, angle_x, angle_y):
+        min_dist = 1
+        max_dist = 5
+        step = 1
+
+        angle = self.transform_angle(angle_x, angle_y)
+
+        for i in range(min_dist, max_dist, step):
+            point = np.array((int(math.floor(unit.x)), int(math.floor(unit.y)))) + np.array((i*math.cos(angle), i*math.sin(angle)))
+            if point[0] > 100 or point[0] < 0 or point[1] > 100 or point[1] < 0:
+                continue
+            #if np.array((int(math.floor(point[0])), int(math.floor(point[1])))) in self.enemy_units:
+            projected_pt = Point2D(int(math.floor(point[0])), int(math.floor(point[1])))
+            # print("Proj Point: ", projected_pt, end="")
+            if projected_pt in self.enemy_units:
+                return i
+
+        # print("Enemy Units: ")
+        # for unit in self.enemy_units:
+        #     print(unit, end=", ")
+
+        return -1
+
 
     def get_moves(self):
         moves = [(0, 0, 0) for i, (unit,pos) in enumerate(self.unit_locations)]
@@ -283,9 +330,48 @@ class Attacker:
 
 
 
+            # detect player in front
+
+            # initiate wave motion
+            # move towards a point
+            new_x = 1
+            new_y = 1
+            new_angle = np.arctan2( (new_y - unit.y), (new_x - unit.x) )
+            hypot = math.sqrt( (new_y - unit.y)**2 + (new_x - unit.x)**2 )
+            
+
+
+
             if real_id in self.left_list:
                 # Even - LEFT attacking troops
-                moves[i] = 1, 1, 0 
+                enemy_dist = self.nearest_enemy_on_line(unit, 1, 0)
+
+
+                if 0 < enemy_dist <= 3:
+                    # initiate wrap around
+                    print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
+
+
+                    moves[i] = 1, 1, 1
+                    
+                    self.left_mid_list.append(real_id)
+                    self.left_list.remove(real_id)
+
+                else:
+                    moves[i] = 1, 1, 0 
+
+            elif real_id in self.left_mid_list:
+                moves[i] = 1, 1, 0
+                self.left_turn2_list.append(real_id)
+                self.left_mid_list.remove(real_id)
+
+            elif real_id in self.left_turn2_list:
+                moves[i] = 1, 1, -1
+                self.left_list.append(real_id)
+                self.left_turn2_list.remove(real_id)
+
+
+
             elif real_id in self.right_list:
                 # Odd - RIGHT attacking troops
                 moves[i] = 1, 0, 1 #distance_to_goal, end_direction[0], end_direction[1]  - Pos x only (right)
@@ -506,7 +592,9 @@ class Player:
         attackingMoves = self.attack.get_moves()
         for attacking_move_idx, real_idx in enumerate(attackers):
             dist, x, y = attackingMoves[attacking_move_idx]
-            moves[real_idx] = (dist if dist <= 1 else 1, np.arctan2(y, x))
+            transformed_move = self.transform_move(x, y, dist)
+            final_angle = transformed_move[1]
+            moves[real_idx] = (dist if transformed_move[0] <= 1 else 1, transformed_move[1])
 
         self.defense.update(self.map_states, defenders, unit_pos[self.player_idx], enemy_units)
         defensiveMoves = self.defense.get_moves()
