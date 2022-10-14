@@ -230,14 +230,11 @@ class Attacker:
                 self.seen.append(real_id)
 
                 if 1 <= self.lr_counter <= 3:    
-                    self.left_list.append(real_id)
+                    # self.left_list.append(real_id)
+                    self.right_list.append(real_id)
+                    # ********** TESTING all going right ********************
                 elif 4 <= self.lr_counter <= 6:
-                    
-                    #self.right_list.append(real_id)
-                    # ********** TESTING all going left ********************
-                    self.left_list.append(real_id)
-
-
+                    self.right_list.append(real_id)
 
                     if self.lr_counter == 6:
                         self.lr_counter = 0
@@ -330,18 +327,6 @@ class Attacker:
 
 
 
-            # detect player in front
-
-            # initiate wave motion
-            # move towards a point
-            new_x = 1
-            new_y = 1
-            new_angle = np.arctan2( (new_y - unit.y), (new_x - unit.x) )
-            hypot = math.sqrt( (new_y - unit.y)**2 + (new_x - unit.x)**2 )
-            
-
-
-
             if real_id in self.left_list:
                 # Even - LEFT attacking troops
                 enemy_dist = self.nearest_enemy_on_line(unit, 1, 0)
@@ -369,6 +354,36 @@ class Attacker:
                 moves[i] = 1, 1, -1
                 self.left_list.append(real_id)
                 self.left_turn2_list.remove(real_id)
+
+            
+            # Same for right side
+            elif real_id in self.right_list:
+                # Even - LEFT attacking troops
+                enemy_dist = self.nearest_enemy_on_line(unit, 0, 1)
+
+
+                if 0 < enemy_dist <= 3:
+                    # initiate wrap around
+                    print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
+
+
+                    moves[i] = 1, 1, 1
+                    
+                    self.right_mid_list.append(real_id)
+                    self.right_list.remove(real_id)
+
+                else:
+                    moves[i] = 1, 0, 1
+
+            elif real_id in self.right_mid_list:
+                moves[i] = 1, 0, 1
+                self.right_turn2_list.append(real_id)
+                self.right_mid_list.remove(real_id)
+
+            elif real_id in self.right_turn2_list:
+                moves[i] = 1, -1, 1
+                self.right_list.append(real_id)
+                self.right_turn2_list.remove(real_id)
 
 
 
