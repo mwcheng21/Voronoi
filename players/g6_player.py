@@ -188,6 +188,8 @@ class Defense:
 
 class Attacker:
 
+    target = "None"
+
     def __init__(self, id, position):
         self.unitType = UnitType.ATTACK
         self.number_units = 0
@@ -207,6 +209,15 @@ class Attacker:
         self.right_mid_list = []
         self.left_turn2_list = []
         self.right_turn2_list = []
+
+        # For determining easier side to attack
+        self.left_initial = []
+        self.right_initial = []
+        self.start_days = {}
+        self.end_days = {}
+
+        self.left_avg = None
+        self.right_avg = None
         
 
 
@@ -230,11 +241,30 @@ class Attacker:
                 self.seen.append(real_id)
 
                 if 1 <= self.lr_counter <= 3:    
-                    # self.left_list.append(real_id)
-                    self.right_list.append(real_id)
-                    # ********** TESTING all going right ********************
+                    if Attacker.target == "None":
+                        if len(self.left_initial) < 3:
+                            self.left_initial.append(real_id)
+                            self.start_days[real_id] = self.day
+                            self.end_days[real_id] = None
+                        self.left_list.append(real_id)
+                    else:
+                        if Attacker.target == "Left":
+                            self.left_list.append(real_id)
+                        else:
+                            self.right_list.append(real_id)
+
                 elif 4 <= self.lr_counter <= 6:
-                    self.right_list.append(real_id)
+                    if Attacker.target == "None":
+                        if len(self.right_initial) < 3:
+                            self.right_initial.append(real_id)
+                            self.start_days[real_id] = self.day
+                            self.end_days[real_id] = None
+                        self.right_list.append(real_id)
+                    else:
+                        if Attacker.target == "Left":
+                            self.left_list.append(real_id)
+                        else:
+                            self.right_list.append(real_id)
 
                     if self.lr_counter == 6:
                         self.lr_counter = 0
@@ -289,9 +319,15 @@ class Attacker:
             return []
 
 
+        all_real_ids = []
+
+
         for i, (unit,pos) in enumerate(self.unit_locations):
             real_id = self.real_ids[pos]
             triplet_no = (self.seen.index(real_id)) % 3 # Is the unit 1, 2, or 3 in the triplet to determine special movement
+
+            # Check if initial attackers have died
+            all_real_ids.append(real_id)
 
             # # Code to group up triplets
             # if real_id in self.left_list and real_id not in self.final_left_list:
@@ -334,7 +370,7 @@ class Attacker:
 
                 if 0 < enemy_dist <= 3:
                     # initiate wrap around
-                    print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
+                    #print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
 
 
                     moves[i] = 1, 1, 1
@@ -364,7 +400,7 @@ class Attacker:
 
                 if 0 < enemy_dist <= 3:
                     # initiate wrap around
-                    print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
+                    #print("Real ID: {}, Pos: ({}, {}), Enemy Dist: {}".format(real_id, unit.x, unit.y, enemy_dist))
 
 
                     moves[i] = 1, 1, 1
@@ -395,6 +431,41 @@ class Attacker:
                 moves[i] = 0, 0, 1 # Does not move
 
 
+        # Check for initial attacker deaths
+        for troop in self.left_initial:
+            if troop not in all_real_ids and self.end_days.get(troop) == None:
+                print("Attacker #{} died on day: {}".format(troop, self.day))
+                self.end_days[troop] = self.day
+        for troop in self.right_initial:
+            if troop not in all_real_ids and self.end_days.get(troop) == None:
+                print("Attacker #{} died on day: {}".format(troop, self.day))
+                self.end_days[troop] = self.day
+
+        # Calculate avg lifespan
+        if self.left_avg == None and len(self.left_initial) == 3:
+            if self.end_days.get(self.left_initial[0]) and self.end_days.get(self.left_initial[1]) and self.end_days.get(self.left_initial[2]):
+                total = self.end_days.get(self.left_initial[0]) - self.start_days.get(self.left_initial[0])
+                total += self.end_days.get(self.left_initial[1]) - self.start_days.get(self.left_initial[1])
+                total += self.end_days.get(self.left_initial[2]) - self.start_days.get(self.left_initial[2])
+                self.left_avg = total / 3
+                print("LEFT AVERAGE: ", self.left_avg)
+            # Check if all 3 are dead, then calc
+        if self.right_avg == None and len(self.right_initial) == 3:
+            if self.end_days.get(self.right_initial[0]) and self.end_days.get(self.right_initial[1]) and self.end_days.get(self.right_initial[2]):
+                total = self.end_days.get(self.right_initial[0]) - self.start_days.get(self.right_initial[0])
+                total += self.end_days.get(self.right_initial[1]) - self.start_days.get(self.right_initial[1])
+                total += self.end_days.get(self.right_initial[2]) - self.start_days.get(self.right_initial[2])
+                self.right_avg = total / 3
+                print("RIGHT AVERAGE: ", self.right_avg)
+
+        # Check if both averages are there, then set target
+        if self.left_avg and self.right_avg:
+            if self.left_avg > self.right_avg:
+                Attacker.target = "Left"
+            else:
+                Attacker.target = "Right"
+
+        
         return moves
 
 
@@ -662,6 +733,7 @@ class Player:
         if self.current_turn % self.spawn_days == 0:
             if self.current_turn <= self.PHASE_ONE_UNITS * self.spawn_days:
                 unitToAdd = self.PHASE_ONE_OUTPUT[(self.current_turn//self.number_units_total )%len(self.PHASE_ONE_OUTPUT)]
+                print("PHASE 1")
             elif self.current_turn <= (self.PHASE_ONE_UNITS + self.PHASE_TWO_UNITS) * self.spawn_days:
                 numberDaysThisPhase = self.current_turn - self.PHASE_ONE_UNITS * self.spawn_days - 1
                 unitToAdd = self.PHASE_TWO_OUTPUT[(numberDaysThisPhase//self.spawn_days)%len(self.PHASE_TWO_OUTPUT)]
